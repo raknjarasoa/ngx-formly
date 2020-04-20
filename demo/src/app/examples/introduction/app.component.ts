@@ -1,13 +1,35 @@
 import { Component } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { FormGroup, FormControl } from '@angular/forms';
 import { FormlyFormOptions, FormlyFieldConfig } from '@ngx-formly/core';
+import { interval } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'formly-app-example',
-  templateUrl: './app.component.html',
+  template: `
+    <form [formGroup]='form' (ngSubmit)='submit()'>
+      <formly-form
+        [model]='model'
+        [fields]='fields'
+        [options]='options'
+        [form]='form'
+      ></formly-form>
+      <button type='submit' class='btn btn-primary submit-button'>
+        Submit
+      </button>
+    </form>
+  `,
 })
 export class AppComponent {
-  form = new FormGroup({});
+  form = new FormGroup({
+    text: new FormControl(null),
+    nested: new FormGroup({
+      story: new FormControl(null),
+    }),
+    awesome: new FormControl(null),
+    whyNot: new FormControl(null),
+    custom: new FormControl(null),
+  });
   model: any = {};
   options: FormlyFormOptions = {
     formState: {
@@ -21,15 +43,16 @@ export class AppComponent {
       templateOptions: {
         label: 'Text',
         placeholder: 'Formly is terrific!',
-        required: true,
-      },
+        hidden: interval(1000).pipe(map(v => v % 2 === 0))
+      }
     },
     {
       key: 'nested.story',
       type: 'textarea',
       templateOptions: {
         label: 'Some sweet story',
-        placeholder: 'It allows you to build and maintain your forms with the ease of JavaScript :-)',
+        placeholder:
+          'It allows you to build and maintain your forms with the ease of JavaScript :-)',
         description: '',
       },
       expressionProperties: {
@@ -86,7 +109,7 @@ export class AppComponent {
 
   submit() {
     if (this.form.valid) {
-      alert(JSON.stringify(this.model));
+      alert(JSON.stringify(this.form.getRawValue()));
     }
   }
 }

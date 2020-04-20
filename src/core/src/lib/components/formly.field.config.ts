@@ -1,8 +1,13 @@
-import { FormGroup, AbstractControl, FormGroupDirective, FormArray, AsyncValidatorFn, ValidatorFn } from '@angular/forms';
-import { Subject, Observable } from 'rxjs';
+import { ComponentRef } from '@angular/core';
+import {
+  AbstractControl,
+  AsyncValidatorFn,
+  FormGroup,
+  ValidatorFn,
+} from '@angular/forms';
+import { Observable } from 'rxjs';
+
 import { FieldType } from '../templates/field.type';
-import { TemplateManipulators } from '../services/formly.config';
-import { ComponentFactoryResolver, ComponentRef, Injector } from '@angular/core';
 
 export interface FormlyFieldConfig {
   /**
@@ -15,8 +20,7 @@ export interface FormlyFieldConfig {
    */
   readonly parent?: FormlyFieldConfig;
 
-
-  readonly options?: FormlyFormOptions;
+  options?: FormlyFormOptions;
   readonly form?: FormGroup;
 
   /**
@@ -48,7 +52,9 @@ export interface FormlyFieldConfig {
    */
   validation?: {
     messages?: {
-      [messageProperties: string]: string | ((error: any, field: FormlyFieldConfig) => string);
+      [messageProperties: string]:
+        | string
+        | ((error: any, field: FormlyFieldConfig) => string);
     };
     show?: boolean;
     [additionalProperties: string]: any;
@@ -97,12 +103,20 @@ export interface FormlyFieldConfig {
   /**
    * Conditionally hiding Field based on values from other Fields
    */
-  hideExpression?: boolean | string | ((model: any, formState: any, field?: FormlyFieldConfig) => boolean);
+  hideExpression?:
+    | boolean
+    | string
+    | ((model: any, formState: any, field?: FormlyFieldConfig) => boolean);
 
   /**
    * An object where the key is a property to be set on the main field config and the value is an expression used to assign that property.
    */
-  expressionProperties?: { [property: string]: string | ((model: any, formState: any, field?: FormlyFieldConfig) => any) | Observable<any> };
+  expressionProperties?: {
+    [property: string]:
+      | string
+      | ((model: any, formState: any, field?: FormlyFieldConfig) => any)
+      | Observable<any>;
+  };
 
   /**
    * This is the [FormControl](https://angular.io/api/forms/FormControl) for the field.
@@ -126,8 +140,6 @@ export interface FormlyFieldConfig {
    */
   fieldGroup?: FormlyFieldConfig[];
 
-  fieldArray?: FormlyFieldConfig;
-
   /**
    * This should be a formly-field type added either by you or a plugin. More information over at Creating Formly Fields.
    */
@@ -138,48 +150,28 @@ export interface FormlyFieldConfig {
    */
   focus?: boolean;
 
-  /**
-   * An object with a few useful properties to control the model changes
-   * - `debounce`: integer value which contains the debounce model update value in milliseconds. A value of 0 triggers an immediate update.
-   * - `updateOn`: string event value that instructs when the control should be updated
-   */
   modelOptions?: {
-    debounce?: {
-      default: number;
-    };
-    /**
-     * @see https://angular.io/api/forms/AbstractControl#updateOn
-     */
     updateOn?: 'change' | 'blur' | 'submit';
   };
-
-  hooks?: FormlyLifeCycleOptions<FormlyHookFn>;
-
-  /**
-   * @deprecated use `hooks` instead
-   */
-  lifecycle?: FormlyLifeCycleOptions;
 
   /**
    * Use `defaultValue` to initialize it the model. If this is provided and the value of the model at compile-time is undefined, then the value of the model will be assigned to `defaultValue`.
    */
   defaultValue?: any;
-
-  /**
-   * Array of functions to execute, as a pipeline, whenever the model updates, usually via user input.
-   */
-  parsers?: ((value: any) => {})[];
 }
 
 export interface ExpressionPropertyCache {
-  expression: (model: any, formState: any, field: FormlyFieldConfigCache) => boolean;
+  expression: (
+    model: any,
+    formState: any,
+    field: FormlyFieldConfigCache
+  ) => boolean;
   expressionValueSetter: (value: any) => void;
   expressionValue?: any;
 }
 
 export interface FormlyFieldConfigCache extends FormlyFieldConfig {
   parent?: FormlyFieldConfigCache;
-  options?: FormlyFormOptionsCache;
   _expressionProperties?: { [property: string]: ExpressionPropertyCache };
   _hide?: boolean;
   _validators?: ValidatorFn;
@@ -191,7 +183,10 @@ export interface FormlyFieldConfigCache extends FormlyFieldConfig {
   };
 }
 
-export type FormlyAttributeEvent = (field: FormlyFieldConfig, event?: any) => void;
+export type FormlyAttributeEvent = (
+  field: FormlyFieldConfig,
+  event?: any
+) => void;
 
 export interface FormlyTemplateOptions {
   type?: string;
@@ -202,16 +197,16 @@ export interface FormlyTemplateOptions {
   rows?: number;
   cols?: number;
   description?: string;
-  hidden?: boolean;
+  hidden?: Observable<boolean>;
   max?: number;
   min?: number;
   minLength?: number;
   maxLength?: number;
-  pattern?: string|RegExp;
+  pattern?: string | RegExp;
   required?: boolean;
   tabindex?: number;
   readonly?: boolean;
-  attributes?: { [key: string]: string|number };
+  attributes?: { [key: string]: string | number };
   step?: number;
   focus?: FormlyAttributeEvent;
   blur?: FormlyAttributeEvent;
@@ -220,52 +215,10 @@ export interface FormlyTemplateOptions {
   click?: FormlyAttributeEvent;
   change?: FormlyAttributeEvent;
   keypress?: FormlyAttributeEvent;
-  templateManipulators?: TemplateManipulators;
   [additionalProperties: string]: any;
 }
 
-export interface FormlyLifeCycleFn {
-  (form?: FormGroup, field?: FormlyFieldConfig, model?: any, options?: FormlyFormOptions): void;
-}
-
-export interface FormlyHookFn {
-  (field?: FormlyFieldConfig): void;
-}
-
-export interface FormlyLifeCycleOptions<T = FormlyLifeCycleFn> {
-  onInit?: T;
-  onChanges?: T;
-  doCheck?: T;
-  afterContentInit?: T;
-  afterContentChecked?: T;
-  afterViewInit?: T;
-  afterViewChecked?: T;
-  onDestroy?: T;
-  [additionalProperties: string]: any;
-}
-
-export interface FormlyFormOptionsCache extends FormlyFormOptions {
-  _checkField?: (field: FormlyFieldConfigCache, ignoreCache?: boolean) => void;
-  _markForCheck?: (field: FormlyFieldConfigCache) => void;
-  _buildForm?: () => void;
-  _resolver?: ComponentFactoryResolver;
-  _injector?: Injector;
-  _hiddenFieldsForCheck?: FormlyFieldConfigCache[];
-  _initialModel?: any;
-}
 export interface FormlyFormOptions {
-  updateInitialValue?: () => void;
-  resetModel?: (model?: any) => void;
   formState?: any;
-  fieldChanges?: Subject<FormlyValueChangeEvent>;
-  fieldTransform?: (fields: FormlyFieldConfig[], model: any, form: FormGroup | FormArray, options: FormlyFormOptions) => FormlyFieldConfig[];
   showError?: (field: FieldType) => boolean;
-  parentForm?: FormGroupDirective | null;
 }
-
-export interface FormlyValueChangeEvent {
-  field: FormlyFieldConfig;
-  type: string;
-  value: any;
-}
-

@@ -1,99 +1,72 @@
 import {
-  Component, EventEmitter, Input, Output,
-  ViewContainerRef, ViewChild, ComponentRef, SimpleChanges, Attribute, ComponentFactoryResolver,
-  OnInit, OnChanges, OnDestroy, DoCheck, AfterContentInit, AfterContentChecked, AfterViewInit, AfterViewChecked, Renderer2, ElementRef,
+  Component,
+  ComponentFactoryResolver,
+  ComponentRef,
+  ElementRef,
+  Input,
+  OnChanges,
+  OnDestroy,
+  Renderer2,
+  SimpleChanges,
+  ViewChild,
+  ViewContainerRef,
 } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { FormlyConfig } from '../services/formly.config';
-import { FormlyFieldConfig, FormlyFormOptions, FormlyFieldConfigCache } from './formly.field.config';
-import { defineHiddenProp, wrapProperty } from '../utils';
 import { FieldWrapper } from '../templates/field.wrapper';
+import {
+  FormlyFieldConfig,
+  FormlyFieldConfigCache,
+} from './formly.field.config';
+import { wrapProperty } from '../utils';
 import { FieldType } from '../templates/field.type';
 
 @Component({
   selector: 'formly-field',
   template: `<ng-template #container></ng-template>`,
 })
-export class FormlyField implements OnInit, OnChanges, DoCheck, AfterContentInit, AfterContentChecked, AfterViewInit, AfterViewChecked, OnDestroy {
+export class FormlyField implements OnChanges, OnDestroy {
   @Input() field: FormlyFieldConfig;
+  @Input() formControl: FormControl;
 
-  warnDeprecation = false;
-
-  @Input() set model(m: any) {
-    this.warnDeprecation && console.warn(`NgxFormly: passing 'model' input to '${this.constructor.name}' component is not required anymore, you may remove it!`);
-  }
-
-  @Input() set form(form: FormGroup) {
-    this.warnDeprecation && console.warn(`NgxFormly: passing 'form' input to '${this.constructor.name}' component is not required anymore, you may remove it!`);
-  }
-
-  @Input() set options(options: FormlyFormOptions) {
-    this.warnDeprecation && console.warn(`NgxFormly: passing 'options' input to '${this.constructor.name}' component is not required anymore, you may remove it!`);
-  }
-
-  @Output() modelChange: EventEmitter<any> = new EventEmitter();
   // TODO: remove `any`, once dropping angular `V7` support.
-  @ViewChild('container', <any> {read: ViewContainerRef, static: true }) containerRef: ViewContainerRef;
-  private hostObservers: Function[] = [];
-  private componentRefs: any[] = [];
+  @ViewChild('container', <any>{ read: ViewContainerRef, static: true })
+  containerRef: ViewContainerRef;
+  private componentRefs: ComponentRef<any>[] = [];
 
   constructor(
     private formlyConfig: FormlyConfig,
     private renderer: Renderer2,
     private resolver: ComponentFactoryResolver,
-    private elementRef: ElementRef,
-    // tslint:disable-next-line
-    @Attribute('hide-deprecation') hideDeprecation,
-  ) {
-    this.warnDeprecation = hideDeprecation === null;
-  }
-
-  ngAfterContentInit() {
-    this.triggerHook('afterContentInit');
-  }
-
-  ngAfterContentChecked() {
-    this.triggerHook('afterContentChecked');
-  }
-
-  ngAfterViewInit() {
-    this.triggerHook('afterViewInit');
-  }
-
-  ngAfterViewChecked() {
-    this.triggerHook('afterViewChecked');
-  }
-
-  ngDoCheck() {
-    this.triggerHook('doCheck');
-  }
-
-  ngOnInit() {
-    this.triggerHook('onInit');
-  }
+    private elementRef: ElementRef
+  ) {}
 
   ngOnChanges(changes: SimpleChanges) {
-    this.triggerHook('onChanges', changes);
+    this.initFieldOptions(this.field);
+    this.renderField(this.containerRef, this.field, this.field.wrappers);
   }
 
-  ngOnDestroy() {
-    this.field && this.resetRefs(this.field);
-    this.hostObservers.forEach(unsubscribe => unsubscribe());
-    this.triggerHook('onDestroy');
+  private initFieldOptions(field: FormlyFieldConfigCache) {
+    if (!field.type && field.fieldGroup) {
+      field.type = 'formly-group';
+    }
+
+    if (field.type) {
+      this.formlyConfig.getMergedField(field);
+    }
   }
 
   private renderField(containerRef: ViewContainerRef, f: FormlyFieldConfigCache, wrappers: string[]) {
     if (this.containerRef === containerRef) {
-      this.resetRefs(this.field);
       this.containerRef.clear();
     }
 
     if (wrappers && wrappers.length > 0) {
       const [wrapper, ...wps] = wrappers;
       const { component } = this.formlyConfig.getWrapper(wrapper);
-
       const ref = containerRef.createComponent<FieldWrapper>(this.resolver.resolveComponentFactory(component));
       this.attachComponentRef(ref, f);
+
       wrapProperty<ViewContainerRef>(ref.instance, 'fieldComponent', ({ firstChange, previousValue, currentValue }) => {
         if (currentValue) {
           const viewRef = previousValue ? previousValue.detach() : null;
@@ -109,64 +82,18 @@ export class FormlyField implements OnInit, OnChanges, DoCheck, AfterContentInit
     } else if (f.type) {
       const { component } = this.formlyConfig.getType(f.type);
       const ref = containerRef.createComponent<FieldWrapper>(this.resolver.resolveComponentFactory(component));
+      this.field.formControl = this.formControl;
       this.attachComponentRef(ref, f);
-    }
-  }
-
-  private triggerHook(name: string, changes?: SimpleChanges) {
-    if (this.field.hooks && this.field.hooks[name]) {
-      if (!changes || changes.field) {
-        this.field.hooks[name](this.field);
-      }
-    }
-
-    if (this.field.lifecycle && this.field.lifecycle[name]) {
-      this.field.lifecycle[name](
-        this.field.form,
-        this.field,
-        this.field.model,
-        this.field.options,
-      );
-    }
-
-    if (name === 'onChanges' && changes.field) {
-      this.renderHostBinding();
-      changes.field.previousValue && this.resetRefs(changes.field.previousValue);
-      this.renderField(this.containerRef, this.field, this.field.wrappers);
     }
   }
 
   private attachComponentRef<T extends FieldType>(ref: ComponentRef<T>, field: FormlyFieldConfigCache) {
     this.componentRefs.push(ref);
-    field._componentRefs.push(ref);
+    // field._componentRefs.push(ref);
     Object.assign(ref.instance, { field });
   }
 
-  private renderHostBinding() {
-    this.hostObservers.forEach(unsubscribe => unsubscribe());
-    this.hostObservers = [
-      wrapProperty(this.field, 'hide', ({ firstChange, currentValue }) => {
-        if (!firstChange || (firstChange && currentValue)) {
-          this.renderer.setStyle(this.elementRef.nativeElement, 'display', currentValue ? 'none' : '');
-        }
-      }),
-      wrapProperty(this.field, 'className', ({ firstChange, currentValue }) => {
-        if (!firstChange || (firstChange && currentValue)) {
-          this.renderer.setAttribute(this.elementRef.nativeElement, 'class', currentValue);
-        }
-      }),
-    ];
-  }
-
-  private resetRefs(field: FormlyFieldConfigCache) {
-    if (field) {
-      if (field._componentRefs) {
-        field._componentRefs = field._componentRefs.filter(ref => this.componentRefs.indexOf(ref) === -1);
-      } else {
-        defineHiddenProp(this.field, '_componentRefs', []);
-      }
-    }
-
-    this.componentRefs = [];
+  ngOnDestroy(): void {
+    this.componentRefs.forEach(ref => ref.destroy());
   }
 }

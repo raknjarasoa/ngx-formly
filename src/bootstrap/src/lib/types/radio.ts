@@ -1,11 +1,13 @@
 import { Component } from '@angular/core';
 import { FieldType } from '@ngx-formly/core';
 
+// *ngFor="let option of to.options | formlySelectOptions:field | async; let i = index;"
+
 @Component({
   selector: 'formly-field-radio',
   template: `
     <div>
-      <div *ngFor="let option of to.options | formlySelectOptions:field | async; let i = index;"
+      <div *ngFor="let option of to.options | async; let i = index;"
         [ngClass]="{
           'form-check': to.formCheck.indexOf('custom') === -1,
           'form-check-inline': to.formCheck === 'inline',

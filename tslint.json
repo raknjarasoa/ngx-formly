@@ -26,12 +26,6 @@
             "spaces"
         ],
         "member-access": false,
-        "member-ordering": [
-          true,
-          "public-before-private",
-          "static-before-instance",
-          "variables-before-functions"
-        ],
         "no-unused-variable": true,
         "no-duplicate-variable": true,
         "no-eval": true,

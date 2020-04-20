@@ -5,24 +5,24 @@ import { FieldType } from '@ngx-formly/core';
   selector: 'formly-field-checkbox',
   template: `
     <div [ngClass]="{
-      'form-check': to.formCheck.indexOf('custom') === -1,
-      'form-check-inline': to.formCheck === 'inline',
-      'custom-control custom-checkbox': to.formCheck.indexOf('custom') === 0,
-      'custom-control-inline': to.formCheck === 'custom-inline'
+      'form-check': toto.formCheck.indexOf('custom') === -1,
+      'form-check-inline': toto.formCheck === 'inline',
+      'custom-control custom-checkbox': toto.formCheck.indexOf('custom') === 0,
+      'custom-control-inline': toto.formCheck === 'custom-inline'
     }">
       <input type="checkbox"
         [class.is-invalid]="showError"
-        [class.form-check-input]="to.formCheck.indexOf('custom') === -1"
-        [class.custom-control-input]="to.formCheck.indexOf('custom') === 0"
-        [indeterminate]="to.indeterminate && formControl.value === null"
+        [class.form-check-input]="toto.formCheck.indexOf('custom') === -1"
+        [class.custom-control-input]="toto.formCheck.indexOf('custom') === 0"
+        [indeterminate]="toto.indeterminate && formControl.value === null"
         [formControl]="formControl"
         [formlyAttributes]="field">
       <label [for]="id"
-        [class.form-check-label]="to.formCheck.indexOf('custom') === -1"
-        [class.custom-control-label]="to.formCheck.indexOf('custom') === 0"
+        [class.form-check-label]="toto.formCheck.indexOf('custom') === -1"
+        [class.custom-control-label]="toto.formCheck.indexOf('custom') === 0"
       >
-        {{ to.label }}
-        <span *ngIf="to.required && to.hideRequiredMarker !== true">*</span>
+        {{ toto.label }}
+        <span *ngIf="toto.required && toto.hideRequiredMarker !== true">*</span>
       </label>
     </div>
   `,
@@ -35,4 +35,8 @@ export class FormlyFieldCheckbox extends FieldType {
       formCheck: 'custom', // 'custom' | 'stacked' | 'inline' | 'custom-inline'
     },
   };
+
+  get toto(): any {
+    return this.defaultOptions.templateOptions;
+  }
 }

@@ -1,7 +1,9 @@
 import { Directive, ElementRef, Input, OnChanges, SimpleChanges, Renderer2, DoCheck, Inject, OnDestroy } from '@angular/core';
 import { FormlyFieldConfig, FormlyTemplateOptions } from './formly.field.config';
-import { wrapProperty, defineHiddenProp, FORMLY_VALIDATORS } from '../utils';
+import { wrapProperty, defineHiddenProp } from '../utils';
 import { DOCUMENT } from '@angular/common';
+
+const FORMLY_VALIDATORS = ['required', 'pattern', 'minLength', 'maxLength', 'min', 'max'];
 
 @Directive({
   selector: '[formlyAttributes]',
@@ -123,23 +125,6 @@ export class FormlyAttributes implements OnChanges, DoCheck, OnDestroy {
     this.detachElementRef(this.field);
   }
 
-  toggleFocus(value: boolean) {
-    const element = this.fieldAttrElements ? this.fieldAttrElements[0] : null;
-    if (!element || !element.nativeElement.focus) {
-      return;
-    }
-
-    const isFocused = !!this.document.activeElement
-      && this.fieldAttrElements
-        .some(({ nativeElement }) => this.document.activeElement === nativeElement || nativeElement.contains(this.document.activeElement));
-
-    if (value && !isFocused) {
-      element.nativeElement.focus();
-    } else if (!value && isFocused) {
-      element.nativeElement.blur();
-    }
-  }
-
   onFocus($event: any) {
     this.field['___$focus'] = true;
     if (this.to.focus) {
@@ -163,6 +148,25 @@ export class FormlyAttributes implements OnChanges, DoCheck, OnDestroy {
       this.field.formControl.markAsDirty();
     }
   }
+
+  private toggleFocus(value: boolean) {
+    const element = this.fieldAttrElements ? this.fieldAttrElements[0] : null;
+    if (!element || !element.nativeElement.focus) {
+      return;
+    }
+
+    const isFocused = !!this.document.activeElement
+      && this.fieldAttrElements
+        .some(({ nativeElement }) => this.document.activeElement === nativeElement || nativeElement.contains(this.document.activeElement));
+
+    if (value && !isFocused) {
+      element.nativeElement.focus();
+    } else if (!value && isFocused) {
+      element.nativeElement.blur();
+    }
+  }
+
+
 
   private attachElementRef(f: FormlyFieldConfig) {
     if (!f) {

@@ -28,8 +28,7 @@ export class ExampleViewerComponent implements OnInit, OnDestroy {
   _debugFields: any;
   _prevModel: any;
 
-  @ViewChild('demo', {read: ViewContainerRef}) demoRef: ViewContainerRef;
-  @ViewChild('modelPreview') modelPreviewRef: ElementRef;
+  @ViewChild('demo', {read: ViewContainerRef}) demoRef: ViewContainerRef; 
   demoComponentRef: ComponentRef<any>;
 
   /** Whether the source for the example is being displayed. */
@@ -38,23 +37,14 @@ export class ExampleViewerComponent implements OnInit, OnDestroy {
 
   constructor(private copier: CopierService, private componentFactoryResolver: ComponentFactoryResolver) {}
 
-  get model() {
-    const model = JSON.stringify(this.demoComponentRef.instance.model);
-    if (this._prevModel !== model && this.modelPreviewRef && this.modelPreviewRef.nativeElement) {
-      this._prevModel = model;
-      const formatter = new JSONFormatter(this.demoComponentRef.instance.model, 5, { hoverPreviewEnabled: true });
-      this.modelPreviewRef.nativeElement.innerHTML = '';
-      this.modelPreviewRef.nativeElement.appendChild(formatter.render());
-    }
-
-    return this.demoComponentRef.instance.model;
-  }
+ 
 
   get debugModel() {
     return this.demoComponentRef.instance.fields[0];
   }
 
   ngOnInit() {
+    // debugger;
     const componentFactory = this.componentFactoryResolver.resolveComponentFactory(this.exampleData.component);
     this.demoComponentRef = this.demoRef.createComponent(componentFactory);
   }

@@ -27,8 +27,6 @@ export function getKeyPath(field: FormlyFieldConfigCache): string[] {
   return field._keyPath.path.slice(0);
 }
 
-export const FORMLY_VALIDATORS = ['required', 'pattern', 'minLength', 'maxLength', 'min', 'max'];
-
 export function assignModelValue(model: any, paths: string[], value: any) {
   for (let i = 0; i < (paths.length - 1); i++) {
     const path = paths[i];
